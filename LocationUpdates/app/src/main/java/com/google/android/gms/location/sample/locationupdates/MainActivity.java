@@ -58,6 +58,7 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -627,11 +628,11 @@ public class MainActivity extends AppCompatActivity {
             String timeStamp = new SimpleDateFormat("yyyyMMdd").format(new Date());
             String FileName = "UserLocation_" + timeStamp + ".txt";
                 File file = new File(storageDir, FileName);
-                FileOutputStream os = null;
-                os = new FileOutputStream(file);
-                os.write(text.getBytes());
-                Log.d(TAG, "requestPermissionFile: Data Saved at :"+file.getAbsolutePath());
-                os.close();
+                FileOutputStream fileOutputStream = new FileOutputStream(file,true);
+                OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
+                writer.append(text);
+                writer.close();
+                fileOutputStream.close();
                 } catch (Exception e) {
                     Log.d(TAG, "requestPermissionFile: Exception Occured"+e.getMessage());
                     e.printStackTrace();
