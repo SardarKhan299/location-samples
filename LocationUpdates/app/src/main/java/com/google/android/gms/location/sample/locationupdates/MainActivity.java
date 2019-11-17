@@ -24,6 +24,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Looper;
 import android.provider.Settings;
 import androidx.annotation.NonNull;
@@ -31,6 +32,8 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -53,7 +56,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
@@ -80,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
      * Code used in requesting runtime permissions.
      */
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    public static final int REQUEST_WRITE_STORAGE = 112;
+
+
 
     /**
      * Constant used in the location settings dialog.
@@ -324,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
     public void stopUpdatesButtonHandler(View view) {
         Log.d(TAG, "stopUpdatesButtonHandler: ");
         // TODO: Show Dialog Here to Save File Name...///
-        
+
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
@@ -418,6 +427,8 @@ public class MainActivity extends AppCompatActivity {
             mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mLastUpdateTimeLabel, mLastUpdateTime));
             // TODO: Save Data in File and Rename it When Stop Button Clicked...//
+            String text =" \n Latitude: " + mCurrentLocation.getLatitude() + " -  Longitude: " + " - Time:"+ mLastUpdateTime;
+            requestPermissionFile(text);
         }
     }
 
@@ -528,8 +539,12 @@ public class MainActivity extends AppCompatActivity {
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
+            String[] PERMISSIONS = {
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+            };
             ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS,
                     REQUEST_PERMISSIONS_REQUEST_CODE);
         }
     }
@@ -541,7 +556,18 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         Log.i(TAG, "onRequestPermissionResult");
+         if(requestCode == REQUEST_WRITE_STORAGE) {
+             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                 Log.d(TAG, "onRequestPermissionsResult: File Permission Granted");
+                 //Toast.makeText(this, "The app was allowed to write to your storage!", Toast.LENGTH_LONG).show();
+                 // Reload the activity with permission granted or use the features what required the permission
+             } else {
+                 Log.d(TAG, "onRequestPermissionsResult: File Permission Not Granted");
+                 //Toast.makeText(this, "The app was not allowed to write to your storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+             }
+         }
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            //requestPermissionFile("");
             if (grantResults.length <= 0) {
                 // If user interaction was interrupted, the permission request is cancelled and you
                 // receive empty arrays.
@@ -582,4 +608,37 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void requestPermissionFile(String text) {
+        Log.d(TAG, "requestPermissionFile: ");
+        boolean hasPermission = (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!hasPermission) {
+            Log.d(TAG, "requestPermissionFile: Request Permission Not Granted");
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_STORAGE);
+        } else {
+            Log.d(TAG, "requestPermissionFile: Permission Available");
+            // You are allowed to write external storage:
+            try{
+            String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/user_location/";
+            File storageDir = new File(path);
+            storageDir.mkdir();
+            String timeStamp = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            String FileName = "UserLocation_" + timeStamp + ".txt";
+                File file = new File(storageDir, FileName);
+                FileOutputStream os = null;
+                os = new FileOutputStream(file);
+                os.write(text.getBytes());
+                Log.d(TAG, "requestPermissionFile: Data Saved at :"+file.getAbsolutePath());
+                os.close();
+                } catch (Exception e) {
+                    Log.d(TAG, "requestPermissionFile: Exception Occured"+e.getMessage());
+                    e.printStackTrace();
+                }
+
+        }
+    }
+
+
 }
