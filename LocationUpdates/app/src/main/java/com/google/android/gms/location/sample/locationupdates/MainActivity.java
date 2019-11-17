@@ -160,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate: ");
         setContentView(R.layout.main_activity);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -198,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
      * @param savedInstanceState The activity state saved in the Bundle.
      */
     private void updateValuesFromBundle(Bundle savedInstanceState) {
+        Log.d(TAG, "updateValuesFromBundle: ");
         if (savedInstanceState != null) {
             // Update the value of mRequestingLocationUpdates from the Bundle, and make sure that
             // the Start Updates and Stop Updates buttons are correctly enabled or disabled.
@@ -236,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
      * updates.
      */
     private void createLocationRequest() {
+        Log.d(TAG, "createLocationRequest: ");
         mLocationRequest = new LocationRequest();
 
         // Sets the desired interval for active location updates. This interval is
@@ -255,11 +258,12 @@ public class MainActivity extends AppCompatActivity {
      * Creates a callback for receiving location events.
      */
     private void createLocationCallback() {
+        Log.d(TAG, "createLocationCallback: ");
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-
+                Log.d(TAG, "onLocationResult: ");
                 mCurrentLocation = locationResult.getLastLocation();
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
                 updateLocationUI();
@@ -273,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
      * if a device has the needed location settings.
      */
     private void buildLocationSettingsRequest() {
+        Log.d(TAG, "buildLocationSettingsRequest: ");
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
         builder.addLocationRequest(mLocationRequest);
         mLocationSettingsRequest = builder.build();
@@ -280,6 +285,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "onActivityResult: ");
         switch (requestCode) {
             // Check for the integer request code originally supplied to startResolutionForResult().
             case REQUEST_CHECK_SETTINGS:
@@ -303,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
      * updates have already been requested.
      */
     public void startUpdatesButtonHandler(View view) {
+        Log.d(TAG, "startUpdatesButtonHandler: ");
         if (!mRequestingLocationUpdates) {
             mRequestingLocationUpdates = true;
             setButtonsEnabledState();
@@ -314,6 +322,9 @@ public class MainActivity extends AppCompatActivity {
      * Handles the Stop Updates button, and requests removal of location updates.
      */
     public void stopUpdatesButtonHandler(View view) {
+        Log.d(TAG, "stopUpdatesButtonHandler: ");
+        // TODO: Show Dialog Here to Save File Name...///
+        
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
@@ -325,6 +336,7 @@ public class MainActivity extends AppCompatActivity {
      * runtime permission has been granted.
      */
     private void startLocationUpdates() {
+        Log.d(TAG, "startLocationUpdates: ");
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
                 .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
@@ -397,6 +409,7 @@ public class MainActivity extends AppCompatActivity {
      * Sets the value of the UI fields for the location latitude, longitude and last update time.
      */
     private void updateLocationUI() {
+        Log.d(TAG, "updateLocationUI: ");
         if (mCurrentLocation != null) {
             mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
                     mCurrentLocation.getLatitude()));
@@ -404,6 +417,7 @@ public class MainActivity extends AppCompatActivity {
                     mCurrentLocation.getLongitude()));
             mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mLastUpdateTimeLabel, mLastUpdateTime));
+            // TODO: Save Data in File and Rename it When Stop Button Clicked...//
         }
     }
 
@@ -411,6 +425,7 @@ public class MainActivity extends AppCompatActivity {
      * Removes location updates from the FusedLocationApi.
      */
     private void stopLocationUpdates() {
+        Log.d(TAG, "stopLocationUpdates: ");
         if (!mRequestingLocationUpdates) {
             Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
@@ -434,6 +449,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         // Within {@code onPause()}, we remove location updates. Here, we resume receiving
         // location updates if the user has requested them.
+        Log.d(TAG, "onResume: ");
         if (mRequestingLocationUpdates && checkPermissions()) {
             startLocationUpdates();
         } else if (!checkPermissions()) {
@@ -446,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-
+        Log.d(TAG, "onPause: ");
         // Remove location updates to save battery.
         stopLocationUpdates();
     }
@@ -455,6 +471,7 @@ public class MainActivity extends AppCompatActivity {
      * Stores activity data in the Bundle.
      */
     public void onSaveInstanceState(Bundle savedInstanceState) {
+        Log.d(TAG, "onSaveInstanceState: ");
         savedInstanceState.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
         savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
         savedInstanceState.putString(KEY_LAST_UPDATED_TIME_STRING, mLastUpdateTime);
@@ -481,6 +498,7 @@ public class MainActivity extends AppCompatActivity {
      * Return the current state of the permissions needed.
      */
     private boolean checkPermissions() {
+        Log.d(TAG, "checkPermissions: ");
         int permissionState = ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
@@ -530,6 +548,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (mRequestingLocationUpdates) {
+                    Log.d(TAG, "onRequestPermissionsResult: ");
                     Log.i(TAG, "Permission granted, updates requested, starting location updates");
                     startLocationUpdates();
                 }
